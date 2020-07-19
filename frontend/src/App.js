@@ -4,6 +4,10 @@ import React, { Component } from "react";
 import Modal from "./components/Modal";
 import axios from "axios";
 
+const API = window.location.origin+'/api/todos/' || "http://localhost:8000/api/todos/";
+const username = Window.username ? Window.username : "utilisateur generique";
+const token = Window.token || undefined;
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -12,21 +16,47 @@ class App extends Component {
       activeItem: {
         title: "",
         description: "",
-        completed: false
+        completed: false,
       },
-      todoList: []
+      todoList: [],
     };
   }
   componentDidMount() {
     this.refreshList();
   }
+
+  processError = (err)=>{
+    if(err.response){
+      var data = err.response.data;
+      var keys = Object.keys(data);
+      var show = "";
+      keys.forEach(key =>{
+        show += `${key} : ${data[key]}`;
+      })
+      alert(show);
+    }
+    else{
+      alert("Erreur Inconnue");
+    }
+  }
+
+  getHeader = ()=>{
+    var headers = {};
+    if(token){
+      headers = {"Authorization" : `Bearer ${token}`};
+    }
+    return headers;
+  }
+
   refreshList = () => {
     axios
-      .get("http://localhost:8000/api/todos/")
-      .then(res => this.setState({ todoList: res.data }))
-      .catch(err => console.log(err));
+      .get(API , {headers : this.getHeader()})
+      .then((res) => this.setState({ todoList: res.data }))
+      .catch((err) => {
+       this.processError(err);
+      });
   };
-  displayCompleted = status => {
+  displayCompleted = (status) => {
     if (status) {
       return this.setState({ viewCompleted: true });
     }
@@ -53,9 +83,9 @@ class App extends Component {
   renderItems = () => {
     const { viewCompleted } = this.state;
     const newItems = this.state.todoList.filter(
-      item => item.completed === viewCompleted
+      (item) => item.completed === viewCompleted
     );
-    return newItems.map(item => (
+    return newItems.map((item) => (
       <li
         key={item.id}
         className="list-group-item d-flex justify-content-between align-items-center"
@@ -89,34 +119,40 @@ class App extends Component {
   toggle = () => {
     this.setState({ modal: !this.state.modal });
   };
-  handleSubmit = item => {
+  handleSubmit = (item) => {
     this.toggle();
     if (item.id) {
       axios
-        .put(`http://localhost:8000/api/todos/${item.id}/`, item)
-        .then(res => this.refreshList());
+        .put(`${API}${item.id}/`, item , {headers : this.getHeader()})
+        .then((res) => this.refreshList())
+        .catch(err =>{
+          this.processError(err);
+        })
       return;
     }
     axios
-      .post("http://localhost:8000/api/todos/", item)
-      .then(res => this.refreshList());
+      .post(API, item , {headers : this.getHeader()})
+      .then((res) => this.refreshList())
+      .catch(err =>{
+        this.processError(err);
+      });
   };
-  handleDelete = item => {
+  handleDelete = (item) => {
     axios
-      .delete(`http://localhost:8000/api/todos/${item.id}`)
-      .then(res => this.refreshList());
+      .delete(`${API}${item.id}` , {headers : this.getHeader()})
+      .then((res) => this.refreshList());
   };
   createItem = () => {
     const item = { title: "", description: "", completed: false };
     this.setState({ activeItem: item, modal: !this.state.modal });
   };
-  editItem = item => {
+  editItem = (item) => {
     this.setState({ activeItem: item, modal: !this.state.modal });
   };
   render() {
     return (
       <main className="content">
-        <h1 className="text-white text-uppercase text-center my-4">Todo app</h1>
+        <h1 className="text-white text-uppercase text-center my-4">Wiafirm Todo app ({username})</h1>
         <div className="row ">
           <div className="col-md-6 col-sm-10 mx-auto p-0">
             <div className="card p-3">

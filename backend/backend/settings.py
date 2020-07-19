@@ -25,7 +25,7 @@ SECRET_KEY = 'l4y@!^rox=b*!x-qd9xa*nt%r$$zcp!p_d&1gh@b99s-#iqsj&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,18 +39,26 @@ INSTALLED_APPS = [
     'corsheaders',            # add this
     'rest_framework',         # add this 
     'todo',
+    'aaa_services'
   ]
 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',    # add this
     'django.middleware.security.SecurityMiddleware',
+
+    'aaa_services.middleware.AuthentificationMiddleware',
+    
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    
+    'aaa_services.middlewares.AuditMiddleware',
+    'aaa_services.middlewares.JournallingMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -123,8 +131,29 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, 'static'),
+# )
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 
 # we whitelist localhost:3000 because that's where frontend will be served
 CORS_ORIGIN_WHITELIST = (
-     'localhost:3000/'
- )
+     'http://localhost:3000',
+)
+
+KEYCLOAK_CONFIG = {
+    'KEYCLOAK_REALM': 'ineat-realm',
+    'KEYCLOAK_CLIENT_ID': 'base-client',
+    'KEYCLOAK_METHOD_VALIDATE_TOKEN': 'DECODE',
+    'KEYCLOAK_SERVER_URL': 'http://localhost:8080/auth/',
+    'KEYCLOAK_CLIENT_SECRET_KEY': '47b1e985-372b-4b46-8963-8b6c9aba0048',
+}
+
+
+INIT_VIEW = "http://192.168.137.103:8002/"
+
+REDIRECT_URL='http://192.168.137.103:8000/access/'
+
+api_base="http://192.168.137.103:8000/"
